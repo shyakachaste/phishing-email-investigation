@@ -23,10 +23,10 @@ In this challenge I analysed the email to find out who really sent it, whether t
 
 I started with what a normal user would see. The subject line contains a transfer reference number (09674321), and the email says funds were "transferred to your account this morning via SWIFT". It gives payment details (about 149,650 USD) and says a receipt is attached. It is signed by "Mr. James Jackson" from Accounts Payable at SEC Marine Services PTE LTD.
 
-![Top part of the email](screenshots/email_1.png)
+![Top part of the email](email_1.png)
 *Figure 1: Top part of the email*
 
-![Bottom part of the email](screenshots/email_2.png)
+![Bottom part of the email](email_2.png)
 *Figure 2: Bottom part of the email with the payment details and signature*
 
 Things that looked wrong to me:
@@ -49,7 +49,7 @@ Next I opened the email source to read the headers. Here is what I found:
 | Reply-To address | `info.mutawamarine@mail.com` |
 | Originating IP address | `192.119.71.157` |
 
-![Email source with headers](screenshots/email_sourcecode.png)
+![Email source with headers](email_sourcecode.png)
 *Figure 3: Email source showing the Received headers, Reply-To and the originating IP (highlighted)*
 
 The most important finding here is that the Reply-To address is different from the sender address. The email comes from mutawamarine.com, but if I replied, my answer would go to a mail.com address. This is a common phishing trick, because the attacker gets the reply even if the sender address is fake or gets blocked.
@@ -60,7 +60,7 @@ I also noticed that the spam filter on the receiving server marked this email as
 
 The originating IP address is `192.119.71.157`. To find its owner I searched it on [Cisco Talos Intelligence](https://talosintelligence.com/).
 
-![Cisco Talos lookup](screenshots/cisco_talos.png)
+![Cisco Talos lookup](cisco_talos.png)
 *Figure 4: Cisco Talos lookup for 192.119.71.157*
 
 Talos shows that the IP is located in Dallas, United States, and that the network owner is **HostPapa**, which is a web hosting company. The sender IP reputation is "Neutral", there is no email volume history, and it is not on the common block lists (SpamCop, CBL, PBL).
@@ -71,7 +71,7 @@ This tells me that the IP is not known to be bad yet, but it also does not prove
 
 SPF is a DNS record that lists which servers are allowed to send email for a domain. I checked the SPF record for mutawamarine.com using the [dmarcian SPF Surveyor](https://dmarcian.com/spf-survey/).
 
-![SPF record](screenshots/spf_record.png)
+![SPF record](spf_record.png)
 *Figure 5: SPF record for mutawamarine.com*
 
 ```
@@ -86,7 +86,7 @@ This record says that only Microsoft Outlook (Microsoft 365) servers are allowed
 
 DMARC tells receiving servers what to do with emails that fail SPF or DKIM checks. I checked it with the [dmarcian Domain Checker](https://dmarcian.com/domain-checker/).
 
-![DMARC record](screenshots/dmarc.png)
+![DMARC record](dmarc.png)
 *Figure 6: DMARC record for mutawamarine.com*
 
 ```
@@ -99,7 +99,7 @@ The domain has a valid DMARC record with the policy set to quarantine. That mean
 
 The attachment is named `SWT_#09674321____PDF__.CAB` and is about 400 KB. I saved it in the lab machine and ran `sha256sum` on it without opening it.
 
-![SHA256 hash of the attachment](screenshots/hashing.png)
+![SHA256 hash of the attachment](hashing.png)
 *Figure 7: SHA256 hash of the attachment*
 
 ```
@@ -110,10 +110,10 @@ The attachment is named `SWT_#09674321____PDF__.CAB` and is about 400 KB. I save
 
 I searched the SHA256 hash on [VirusTotal](https://www.virustotal.com/).
 
-![VirusTotal detection result](screenshots/virustotal_1.png)
+![VirusTotal detection result](virustotal_1.png)
 *Figure 8: VirusTotal detection result*
 
-![VirusTotal file details](screenshots/virustotal_2.png)
+![VirusTotal file details](virustotal_2.png)
 *Figure 9: VirusTotal file details*
 
 48 out of 64 security vendors flagged the file as malicious. The file size is 400.26 KB, and VirusTotal tags it as "rar", "spreader" and "attachment".
