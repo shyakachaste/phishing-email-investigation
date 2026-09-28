@@ -1,12 +1,12 @@
 # Greenholt Phish: Phishing Email Investigation
 
-TryHackMe challenge write-up
+Hands-on lab completed on TryHackMe
 
 ## Overview
 
 A sales executive at Greenholt PLC reported a suspicious email from a customer they know. The email had a generic greeting, asked about a money transfer they did not expect, and came with an attachment. The employee said this was not how the customer normally writes, so the email was sent to the security team to check.
 
-In this challenge I analysed the email to find out who really sent it, whether the sender could be trusted, and whether the attachment was safe. My conclusion is that it is a phishing email with a malicious attachment.
+In this challenge I analyzed the email to find out who really sent it, whether the sender could be trusted, and whether the attachment was safe. My conclusion is that it is a phishing email with a malicious attachment.
 
 ## Tools I used
 
@@ -145,15 +145,15 @@ This is a phishing email. The reasons are:
 - The Reply-To address goes to a different domain than the sender.
 - The sending IP is a web hosting server, and it does not match the SPF record of the domain, which only allows Microsoft servers.
 - The signature company name does not match the sender domain.
-- The attachment pretends to be a PDF, uses a .CAB extension, and is really a RAR archive that 48 of 64 vendors detect as malicious.
+- The attachment pretends to be a PDF, uses a .CAB extension and is really a RAR archive that 48 of 64 vendors detect as malicious.
 
 ## What I would recommend
 
 - Block the sender address, the Reply-To address and the IP address, and delete any other copies of this email from mailboxes.
 - Search for the attachment hash in email and endpoint logs to see if anyone else received or opened it.
 - If anyone opened the attachment, isolate that computer and scan it.
-- Block or scan archive attachments (RAR, CAB, ZIP) from outside senders, and check the real file type instead of trusting the extension.
-- Ask the employee to keep reporting emails like this, and remind staff to confirm payment requests by calling the sender on a known number.
+- Block or scan archive attachments (RAR, CAB, ZIP) from outside senders and check the real file type instead of trusting the extension.
+- Ask the employee to keep reporting emails like this and remind staff to confirm payment requests by calling the sender on a known number.
 
 ## What I learned
 
