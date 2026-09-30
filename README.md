@@ -7,7 +7,7 @@ Hands-on phishing email analysis labs completed on TryHackMe. Each lab has its o
 | Lab | What I did | Status |
 |---|---|---|
 | [Greenholt Phish](./Greenholt-Phish) | Analysed a suspicious "payment notice" email: read the headers, checked the sender IP, SPF and DMARC records, and checked the attachment hash on VirusTotal. Found a malicious RAR file disguised as a PDF. | Done |
-| Snapped Phish-ing Line | Coming soon | In progress |
+| [Snapped Phish-ing Line](./Snapped-Phishing-Line) | Traced a phishing campaign from the first email to a fake Microsoft login page, found the attacker's phishing kit exposed on their own site, and pulled stolen credentials and the attacker's collection email out of it. | Done |
 
 ## What I practise in these labs
 
@@ -16,8 +16,9 @@ Hands-on phishing email analysis labs completed on TryHackMe. Each lab has its o
 - Checking IP addresses and domains with threat intelligence tools
 - Checking SPF and DMARC records
 - Hashing attachments and checking them on VirusTotal
+- Following phishing links and analysing phishing kits
 - Writing clear findings and recommendations
 
 ## Tools used
 
-Cisco Talos Intelligence, dmarcian (SPF Surveyor and Domain Checker), VirusTotal, `sha256sum`
+Cisco Talos Intelligence, dmarcian (SPF Surveyor and Domain Checker), VirusTotal, CyberChef, `sha256sum`
