@@ -22,7 +22,7 @@ The investigation went further than a normal email check, because the attacker h
 
 The first email went to an employee with the subject "Quote for Services Rendered". It came from a "Group Marketing Online" sender (`Accounts.Payable@groupmarketingonline[.]icu`) with a PDF attached. The same sender address was used across the whole campaign.
 
-![Quote for Services Rendered email](screenshots/Email.png)
+![Quote for Services Rendered email](Email.png)
 *Figure 1: Phishing email sent from the attacker's address*
 
 ### 2. The HTML attachment
@@ -33,26 +33,26 @@ A second email in the batch carried an HTML attachment instead of a PDF. Opening
 
 I opened the link inside the VM to see where it led.
 
-![kennaroads.buzz homepage](screenshots/kennaroads.png)
+![kennaroads.buzz homepage](kennaroads.png)
 *Figure 2: The site's home page looks like an ordinary WordPress blog, most likely a legitimate site that was compromised and reused to host the phishing page*
 
 The full redirect led to a fake Microsoft sign-in page, pre-filled with the victim's email address to look convincing.
 
-![Fake Microsoft login page](screenshots/microsoft.png)
+![Fake Microsoft login page](microsoft.png)
 *Figure 3: Fake Microsoft login page asking for the victim's password*
 
 ### 4. Exposed directory
 
 Because the page lived on a real website, I checked whether the attacker had left directory browsing enabled. The `/data/` path showed an open directory listing.
 
-![Index of /data directory](screenshots/kennaroads_data.png)
+![Index of /data directory](kennaroads_data.png)
 *Figure 4: The open `/data` directory contained `Update365.zip`, the phishing kit*
 
 ### 5. Hashing the phishing kit
 
 I downloaded the archive into the VM and hashed it before opening it.
 
-![sha256sum of the zip file](screenshots/terminal_1.png)
+![sha256sum of the zip file](terminal_1.png)
 *Figure 5: SHA256 hash of the archive*
 
 ```
@@ -63,17 +63,17 @@ ba3c15267393419eb08c7b2652b8b6b39b406ef300ae8a18fee4d16b19ac9686
 
 Searching the hash on VirusTotal showed 32 of 66 vendors flagging the file as malicious. Besides phishing, it carries a **trojan** category and labels such as `phishmailer`, `phishingms` and `hacktool`. That tells me it is a packaged phishing kit that security vendors treat as malware, not just a static fake page.
 
-![VirusTotal detection for the zip](screenshots/virustotal_hash.png)
+![VirusTotal detection for the zip](virustotal_hash.png)
 *Figure 6: VirusTotal detections for the archive*
 
-![VirusTotal bundle details](screenshots/virustotal_folder.png)
+![VirusTotal bundle details](virustotal_folder.png)
 *Figure 7: The archive contains 49 files*
 
 ### 7. Exposed credential log
 
 The open `/data` directory also contained a log file with captured credentials in plain text, each with an IP address and timestamp.
 
-![Log file with captured credentials](screenshots/log.png)
+![Log file with captured credentials](log.png)
 *Figure 8: Log of captured credentials (lab data)*
 
 One employee account appeared more than once, meaning that user submitted credentials on the fake form multiple times.
@@ -82,12 +82,12 @@ One employee account appeared more than once, meaning that user submitted creden
 
 I extracted the archive in the VM and looked through its structure for the script that handles submitted credentials.
 
-![Extracted kit folder structure](screenshots/terminal_2.png)
+![Extracted kit folder structure](terminal_2.png)
 *Figure 9: Extracted kit, with the phishing pages and scripts in the `Validation` folder*
 
 The `submit.php` script builds a message containing the victim's email, password, IP address, browser and country, then emails it to a hard-coded address (`m3npat@yandex[.]com`). This means credentials are exfiltrated even if the server log is later deleted.
 
-![submit.php contents](screenshots/terminal_3.png)
+![submit.php contents](terminal_3.png)
 *Figure 10: `submit.php` collecting the details and sending them by email*
 
 ## Indicators of compromise (IOCs)
