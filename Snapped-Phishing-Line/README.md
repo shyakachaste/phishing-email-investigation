@@ -1,164 +1,128 @@
 # Snapped Phish-ing Line: Phishing Campaign Investigation
 
-Hands-on lab completed on TryHackMe
+Simulated phishing investigation completed in a TryHackMe lab environment. All emails, domains and credentials are lab data.
 
 ## Overview
 
-Several employees at SwiftSpend Financial reported a suspicious email on the same day, and some of them had already entered their login details and were locked out of their accounts. I was asked to look into the emails, find out what the attacker was doing, and check how far the attack had gone.
+In this simulated scenario, several employees at a fictional company (SwiftSpend Financial) received the same suspicious email on one day, and some entered their login details and were locked out of their accounts. My task was to analyze the emails, work out how the attacker operated, and judge how far the attack had spread.
 
-This one went further than a normal phishing email check, because the attacker had left files open on their own website. I was able to follow the phishing link all the way to the fake login page, find the phishing kit the attacker used to build it, and even find a log file with real stolen passwords in it.
+The investigation went further than a normal email check, because the attacker had left files exposed on their own website. I followed the phishing link to the fake login page, recovered the phishing kit used to build it, and found a log file of captured credentials.
 
-## Tools I used
+## Tools used
 
-- **Thunderbird:** to read the reported emails
-- **Firefox (in the analysis VM):** to open the phishing link and browse the attacker's website
-- **VirusTotal:** to check the phishing kit archive
-- **sha256sum:** to hash the archive
-- **CyberChef:** to decode a hidden flag
-- Basic Linux commands to extract and read the phishing kit files
+- **Thunderbird:** reading the reported emails
+- **Firefox (analysis VM):** opening the phishing link and browsing the attacker's site safely
+- **VirusTotal:** checking the phishing kit archive
+- **sha256sum:** hashing the archive before opening it
+- **Basic Linux commands:** extracting and reading the kit's files
 
 ## Investigation
 
-### 1. The first email
+### 1. Reviewing the reported emails
 
-The first email was sent to William McClean with the subject "Quote for Services Rendered". It came from Group Marketing Online, with the sender address `Accounts.Payable@groupmarketingonline.icu`, and had a PDF attached. This address turned out to be the one the attacker used for the whole campaign.
+The first email went to an employee with the subject "Quote for Services Rendered". It came from a "Group Marketing Online" sender (`Accounts.Payable@groupmarketingonline[.]icu`) with a PDF attached. The same sender address was used across the whole campaign.
 
-![Quote for Services Rendered email](Email.png)
-*Figure 1: Email to William McClean from the attacker's address*
+![Quote for Services Rendered email](screenshots/Email.png)
+*Figure 1: Phishing email sent from the attacker's address*
 
-### 2. The email to Zoe Duncan
+### 2. The HTML attachment
 
-A second email in the same batch was sent to Zoe Duncan and had an HTML attachment. Opening the attachment file showed a link that pointed to `kennaroads.buzz`, which is the root domain of the redirect. Instead of a PDF, this email used an HTML file to send the victim straight to the attacker's phishing site.
+A second email in the batch carried an HTML attachment instead of a PDF. Opening the attachment revealed a redirect link to `kennaroads[.]buzz`. Using an HTML file lets the attacker send victims straight to the phishing site without a visible link in the email body.
 
-### 3. Following the link
+### 3. Following the redirect
 
-I opened the link in the VM's browser to see where it led.
+I opened the link inside the VM to see where it led.
 
-![kennaroads.buzz homepage](kennaroads.png)
-*Figure 2: kennaroads.buzz home page. This is a normal-looking WordPress blog, most likely a legitimate site that the attacker had compromised and was using to host the phishing page*
+![kennaroads.buzz homepage](screenshots/kennaroads.png)
+*Figure 2: The site's home page looks like an ordinary WordPress blog, most likely a legitimate site that was compromised and reused to host the phishing page*
 
-Following the full redirect link led to a fake Microsoft sign-in page, pre-filled with the victim's email address to make it look real.
+The full redirect led to a fake Microsoft sign-in page, pre-filled with the victim's email address to look convincing.
 
-![Fake Microsoft login page](microsoft.png)
-*Figure 3: Fake Microsoft login page hosted on kennaroads.buzz, asking for the victim's password*
+![Fake Microsoft login page](screenshots/microsoft.png)
+*Figure 3: Fake Microsoft login page asking for the victim's password*
 
-### 4. Checking for exposed files
+### 4. Exposed directory
 
-Since the phishing page was hosted on a real website, I checked if the attacker had left the folder structure open to browsing. Going to `kennaroads.buzz/data/` showed a directory listing.
+Because the page lived on a real website, I checked whether the attacker had left directory browsing enabled. The `/data/` path showed an open directory listing.
 
-![Index of /data directory](kennaroads_data.png)
-*Figure 4: The `/data` directory was open and showed a file called `Update365.zip`, which is the phishing kit itself*
+![Index of /data directory](screenshots/kennaroads_data.png)
+*Figure 4: The open `/data` directory contained `Update365.zip`, the phishing kit*
 
-### 5. Getting the phishing kit
+### 5. Hashing the phishing kit
 
-I downloaded `Update365.zip` to the VM and hashed it with `sha256sum` before opening it.
+I downloaded the archive into the VM and hashed it before opening it.
 
-![sha256sum of the zip file](terminal_1.png)
-*Figure 5: SHA256 hash of Update365.zip*
+![sha256sum of the zip file](screenshots/terminal_1.png)
+*Figure 5: SHA256 hash of the archive*
 
 ```
 ba3c15267393419eb08c7b2652b8b6b39b406ef300ae8a18fee4d16b19ac9686
 ```
 
-### 6. Checking the kit on VirusTotal
+### 6. VirusTotal analysis
 
-I searched the hash on VirusTotal.
+Searching the hash on VirusTotal showed 32 of 66 vendors flagging the file as malicious. Besides phishing, it carries a **trojan** category and labels such as `phishmailer`, `phishingms` and `hacktool`. That tells me it is a packaged phishing kit that security vendors treat as malware, not just a static fake page.
 
-![VirusTotal detection for the zip](virustotal_hash.png)
-*Figure 6: VirusTotal result: 32 out of 66 vendors flag the file as malicious*
+![VirusTotal detection for the zip](screenshots/virustotal_hash.png)
+*Figure 6: VirusTotal detections for the archive*
 
-32 of 66 vendors flagged it, and besides phishing it is also tagged as a **trojan**, with labels like `phishmailer`, `phishingms` and `hacktool`. So this is not just a static fake login page, it is a packaged phishing kit that vendors treat as malware.
-
-![VirusTotal bundle details](virustotal_folder.png)
+![VirusTotal bundle details](screenshots/virustotal_folder.png)
 *Figure 7: The archive contains 49 files*
 
-### 7. Reading the exposed log file
+### 7. Exposed credential log
 
-Since the whole `/data` folder was open, I also checked `/data/Update365/log.txt`, and the attacker had left the captured credentials sitting there in plain text.
+The open `/data` directory also contained a log file with captured credentials in plain text, each with an IP address and timestamp.
 
-![Log file with captured credentials](log.png)
-*Figure 8: log.txt showing captured emails and passwords, each with an IP address and timestamp*
+![Log file with captured credentials](screenshots/log.png)
+*Figure 8: Log of captured credentials (lab data)*
 
-I noticed one user, `michael.ascot@swiftspend.finance`, appears more than once in the log, meaning he submitted his credentials on the form more than once.
+One employee account appeared more than once, meaning that user submitted credentials on the fake form multiple times.
 
-### 8. Extracting the kit and reading submit.php
+### 8. Analyzing the kit: where credentials go
 
-I extracted the archive on the VM and went into the kit's folder structure to find the script that handles the stolen credentials.
+I extracted the archive in the VM and looked through its structure for the script that handles submitted credentials.
 
-![Extracted kit folder structure](terminal_2.png)
-*Figure 9: Extracted Update365 kit, showing the office365/Validation folder with the phishing pages and scripts*
+![Extracted kit folder structure](screenshots/terminal_2.png)
+*Figure 9: Extracted kit, with the phishing pages and scripts in the `Validation` folder*
 
-Inside `Validation`, the file `submit.php` builds the message with the stolen email and password, and sends it out.
+The `submit.php` script builds a message containing the victim's email, password, IP address, browser and country, then emails it to a hard-coded address (`m3npat@yandex[.]com`). This means credentials are exfiltrated even if the server log is later deleted.
 
-![submit.php contents](terminal_3.png)
-*Figure 10: submit.php collecting the email, password, IP, browser and country, and emailing it out*
+![submit.php contents](screenshots/terminal_3.png)
+*Figure 10: `submit.php` collecting the details and sending them by email*
 
-The script sends every set of stolen credentials to:
+## Indicators of compromise (IOCs)
 
-```
-m3npat@yandex.com
-```
+Domains and emails are defanged with `[.]` so they cannot be clicked by accident.
 
-This is the attacker's real collection point. Even if the log file on the server is later cleaned up, every stolen password still goes out by email too.
+| Indicator | Type | Context |
+|---|---|---|
+| `Accounts.Payable@groupmarketingonline[.]icu` | Sender email | Used for the whole campaign |
+| `kennaroads[.]buzz` | Domain | Compromised site hosting the redirect, fake login and kit |
+| `kennaroads[.]buzz/data/` | URL path | Exposed directory with the kit and credential log |
+| `Update365.zip` | File name | Phishing kit archive (49 files) |
+| `ba3c15267393419eb08c7b2652b8b6b39b406ef300ae8a18fee4d16b19ac9686` | SHA256 | Phishing kit, 32/66 vendors flag it |
+| `m3npat@yandex[.]com` | Email | Collection address configured in `submit.php` |
 
-### 9. Finding the hidden flag
+## Impact
 
-Going back to the website, I found a `flag.txt` file under the same folder as the fake login page.
-
-![flag.txt with base64 secret](encrysecret.png)
-*Figure 11: flag.txt containing a base64-looking string*
-
-```
-fUxSVV8zSHRfaFQxd195NExwe01IVAo=
-```
-
-I decoded it in the VM terminal, first with base64, then reversed the result, since the string was stored backwards.
-
-![Decoding the flag in the terminal](terminal_4.png)
-*Figure 12: Decoding the flag with base64 -d, then piping into rev*
-
-```
-echo "fUxSVV8zSHRfaFQxd195NExwe01IVAo=" | base64 -d | rev
-```
-
-This gave the flag:
-
-```
-THM{pL4y_w1Th_tH3_URL}
-```
-
-## Summary of findings
-
-| Question | Answer |
-|---|---|
-| Employee who received the Quote email | William McClean |
-| Adversary's sending address | `Accounts.Payable@groupmarketingonline.icu` |
-| Root domain of the redirect URL (Zoe Duncan email) | `kennaroads.buzz` |
-| Company impersonated on the fake login page | Microsoft |
-| Name of the exposed archive | `Update365.zip` |
-| SHA256 of the archive | `ba3c15267393419eb08c7b2652b8b6b39b406ef300ae8a18fee4d16b19ac9686` |
-| Extra threat category on VirusTotal (besides phishing) | Trojan |
-| Number of files inside the archive | 49 |
-| User who submitted credentials more than once | `michael.ascot@swiftspend.finance` |
-| Email address collecting stolen credentials | `m3npat@yandex.com` |
-| Hidden flag in flag.txt | `THM{pL4y_w1Th_tH3_URL}` |
+At least one employee account submitted credentials more than once, and all accounts listed in the exposed log should be treated as compromised.
 
 ## Conclusion
 
-This was a larger and more organised phishing campaign than a single email. The attacker sent out emails from one address, used both PDF and HTML attachments to lead victims to a fake Microsoft login page, and hosted that page on what looks like a hacked legitimate WordPress site. Because the attacker left their `/data` folder open to the public, I was able to download their own phishing kit, see the full list of stolen credentials in a plain text log, and find the email address where every new set of credentials was being sent. At least one employee, `michael.ascot@swiftspend.finance`, had their credentials captured more than once.
+This was a larger and better organized campaign than a single phishing email. The attacker used one sender address, delivered victims to a fake Microsoft login through PDF and HTML attachments, and hosted the page on what looks like a compromised legitimate website. Because the attacker left a directory open, I could recover the phishing kit, read the captured credentials, and identify the address collecting them.
 
-## What I would recommend
+## Recommendations
 
-- Force a password reset for every account found in the exposed log file, and check those accounts for suspicious activity such as mailbox rules, forwarding, or sign-ins from unusual locations.
-- Block the sender address and the `kennaroads.buzz` domain at the email gateway and web proxy.
-- Report the compromised `kennaroads.buzz` site to its host so the phishing kit and log file can be taken down.
-- Turn on multi-factor authentication for all accounts, so a stolen password alone is not enough to log in.
-- Keep training staff to check sender addresses and links before entering credentials, and keep encouraging them to report suspicious emails quickly, since that is what started this investigation.
+- Force a password reset for every account in the exposed log, and check those accounts for suspicious activity such as new mailbox rules, forwarding, or sign-ins from unusual locations.
+- Block the sender address and the `kennaroads[.]buzz` domain at the email gateway and web proxy.
+- Report the compromised site to its host so the kit and log file can be removed.
+- Require multi-factor authentication on all accounts so a stolen password alone is not enough.
+- Keep training staff to check senders and links before entering credentials, and to report suspicious emails quickly.
 
 ## What I learned
 
 - How a phishing kit is put together, and how scripts like `submit.php` collect and forward stolen credentials.
-- That attackers sometimes host phishing pages on hacked legitimate websites instead of new domains.
-- How to find and use exposed directories and log files as extra evidence during an investigation.
-- How to use VirusTotal to check an archive file, not just a single file, and read its threat categories.
-- How to decode encoded data with base64 and `rev` on the command line.
+- That attackers sometimes host phishing pages on compromised legitimate websites instead of new domains.
+- How exposed directories and logs can give extra evidence during an investigation.
+- How to check an archive with VirusTotal and read its threat categories and file count.
+- How to write up findings as indicators of compromise with clear recommendations.
